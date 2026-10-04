@@ -236,93 +236,36 @@ export function createLocateControl(
   }
 
   async function getInitialPosition(): Promise<{ lat: number; lng: number; accuracy: number } | null> {
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const pos = await Geolocation.getCurrentPosition({
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 0,
-        })
-        return {
+    return new Promise((resolve, reject) => {
+      if (!('geolocation' in navigator)) {
+        reject(new Error('没有系统定位'))
+        return
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy: pos.coords.accuracy ?? 0,
-        }
-      } catch (e) {
-        console.log('[Locate] Low-accuracy getCurrentPosition failed, trying high accuracy:', e)
-      }
-      try {
-        const pos = await Geolocation.getCurrentPosition({
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        })
-        return {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy ?? 0,
-        }
-      } catch (e) {
-        console.error('[Locate] High-accuracy getCurrentPosition also failed:', e)
-        throw e
-      }
-    } else {
-      return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy ?? 0,
-          }),
-          (err) => reject(err),
-          { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 }
-        )
-      })
-    }
+        }),
+        (err) => reject(err),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+      )
+    })
   }
 
   function startWatchForFollow() {
     if (watchId !== null) return
-    
     console.log('[Locate] Starting watch for continuous updates')
     try {
-      if (Capacitor.isNativePlatform()) {
-        Geolocation.watchPosition(
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000, minimumUpdateInterval: 1000 },
-          (position, err) => {
-            if (err || !position) {
-              console.warn('[Locate] Watch error:', err)
-              recordLocateDebug('跟随', `监听失败 ${err ? err.message : '空位置'}`)
-              return
-            }
-            console.log('[Locate] Watch update:', position.coords.latitude, position.coords.longitude)
-            onWatchPosition(
-              position.coords.latitude,
-              position.coords.longitude,
-              position.coords.accuracy ?? 0
-            )
-          }
-        ).then((id) => {
-          watchId = id
-          console.log('[Locate] Watch started with id:', id)
-        }).catch((e) => {
-          console.warn('[Locate] Failed to start watch:', e)
-        })
-      } else {
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            console.log('[Locate] Watch update:', position.coords.latitude, position.coords.longitude)
-            onWatchPosition(
-              position.coords.latitude,
-              position.coords.longitude,
-              position.coords.accuracy ?? 0
-            )
-          },
-          (err) => console.warn('[Locate] Watch error:', err),
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
-        )
-        console.log('[Locate] Browser watch started with id:', watchId)
-      }
+      if (!('geolocation' in navigator)) return
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          recordLocateDebug('跟随', `系统更新 ${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)} 精度 ${Math.round(position.coords.accuracy)} 米`)
+          onWatchPosition(position.coords.latitude, position.coords.longitude, position.coords.accuracy ?? 0)
+        },
+        (err) => recordLocateDebug('跟随', `系统监听失败 ${err.message}`),
+        { enableHighAccuracy: false, maximumAge: 10000, timeout: 8000 }
+      )
     } catch (e) {
       console.warn('[Locate] startWatchForFollow failed:', e)
     }
@@ -353,35 +296,23 @@ export function createLocateControl(
     const done = () => {
       pollInFlight = false
     }
-    if (Capacitor.isNativePlatform()) {
-      Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 8000,
-        maximumAge: 2000,
-      }).then((pos) => {
-        console.log('[Locate] Poll GPS:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5))
-        recordLocateDebug('跟随', `轮询 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} 精度 ${Math.round(pos.coords.accuracy ?? 0)} 米`)
-        onWatchPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 0)
-      }).catch((e) => {
-        console.warn('[Locate] Poll GPS error:', e)
-        recordLocateDebug('跟随', `轮询失败 ${e instanceof Error ? e.message : String(e)}`)
-        if (lastLatLng) emitPosition()
-      }).finally(done)
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          console.log('[Locate] Poll GPS:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5))
-          onWatchPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 0)
-          done()
-        },
-        (err) => {
-          console.warn('[Locate] Poll GPS error:', err)
-          if (lastLatLng) emitPosition()
-          done()
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
-      )
+    if (!('geolocation' in navigator)) {
+      done()
+      return
     }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        recordLocateDebug('跟随', `轮询 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} 精度 ${Math.round(pos.coords.accuracy)} 米`)
+        onWatchPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 0)
+        done()
+      },
+      (err) => {
+        recordLocateDebug('跟随', `轮询失败 ${err.message}`)
+        if (lastLatLng) emitPosition()
+        done()
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 10000 }
+    )
   }
 
   function startPolling() {
