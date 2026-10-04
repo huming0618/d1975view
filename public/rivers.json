@@ -1,0 +1,166 @@
+{
+  "source": "OpenStreetMap waterway=river crossings of the 西成客专 polyline",
+  "generated": "2026-10-04T09:09:36.821Z",
+  "notes": {
+    "kmSystem": "Same polyline chainage as the station scale; 西安北 = 0",
+    "onlyCrossings": "Only rivers the railway actually crosses; pass-by / parallel rivers omitted",
+    "stationSnap": "A river named against a station sits on that station km (within 2 km)"
+  },
+  "summary": {
+    "totalKm": 656.3,
+    "riverCount": 37,
+    "uniqueRivers": 35
+  },
+  "rivers": [
+    {
+      "name": "沣河",
+      "km": 23.4
+    },
+    {
+      "name": "曲峪河",
+      "km": 53.4
+    },
+    {
+      "name": "潭峪河（新河）",
+      "km": 55.3
+    },
+    {
+      "name": "涝峪",
+      "km": 75.5
+    },
+    {
+      "name": "子午河",
+      "km": 91.9
+    },
+    {
+      "name": "椒溪河",
+      "km": 138.3
+    },
+    {
+      "name": "金水河",
+      "km": 153.5
+    },
+    {
+      "name": "酉水河",
+      "km": 167.1
+    },
+    {
+      "name": "傥水河",
+      "km": 191.2,
+      "desc": "洋县西站",
+      "alignedTo": "洋县西"
+    },
+    {
+      "name": "溢水河",
+      "km": 196.7
+    },
+    {
+      "name": "胥水河",
+      "km": 208.5
+    },
+    {
+      "name": "汉王河（惊邦河）",
+      "km": 226.5
+    },
+    {
+      "name": "汉江",
+      "km": 245.8
+    },
+    {
+      "name": "漾水河",
+      "km": 274.8
+    },
+    {
+      "name": "玉带河",
+      "km": 311.1
+    },
+    {
+      "name": "潜溪河",
+      "km": 340.1
+    },
+    {
+      "name": "嘉陵江",
+      "km": 372.4
+    },
+    {
+      "name": "白龙江",
+      "km": 394.1
+    },
+    {
+      "name": "清江河",
+      "km": 415.4
+    },
+    {
+      "name": "涪江 (1)",
+      "km": 517
+    },
+    {
+      "name": "涪江 (2)",
+      "km": 525.2
+    },
+    {
+      "name": "涪江 (3)",
+      "km": 536.2
+    },
+    {
+      "name": "安昌河",
+      "km": 547.5
+    },
+    {
+      "name": "凯江",
+      "km": 571.6
+    },
+    {
+      "name": "绵远河",
+      "km": 585.1
+    },
+    {
+      "name": "石亭江",
+      "km": 600.7
+    },
+    {
+      "name": "白玉河",
+      "km": 606
+    },
+    {
+      "name": "坪桥河",
+      "km": 609.3
+    },
+    {
+      "name": "李家堰河",
+      "km": 611.2
+    },
+    {
+      "name": "鸭子河",
+      "km": 613.5
+    },
+    {
+      "name": "濛阳河",
+      "km": 616.6
+    },
+    {
+      "name": "马牧河",
+      "km": 616.9
+    },
+    {
+      "name": "蒋家河",
+      "km": 620.1
+    },
+    {
+      "name": "青白江",
+      "km": 623.4
+    },
+    {
+      "name": "绣川河",
+      "km": 629.6
+    },
+    {
+      "name": "饮马河",
+      "km": 634.9
+    },
+    {
+      "name": "毗河",
+      "km": 637.6
+    }
+  ]
+}

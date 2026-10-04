@@ -1,0 +1,31 @@
+{
+  "name": "d1975view",
+  "private": true,
+  "version": "1.0.0",
+  "description": "D1975 西成客专沿线地图 — 西安北至成都东（Leaflet + Capacitor Android）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "build:data": "node scripts/build-data.mjs",
+    "build:tiles": "node scripts/download-tiles.mjs",
+    "postinstall": "python3 scripts/patch-fused-location.py",
+    "patch:location": "python3 scripts/patch-fused-location.py",
+    "build:android": "VITE_BASE=./ vite build && npx cap sync android && python3 scripts/patch-fused-location.py",
+    "cap:sync": "npx cap sync android && python3 scripts/patch-fused-location.py",
+    "cap:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/geolocation": "^6.1.1",
+    "@types/leaflet": "^1.9.22",
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.2",
+    "typescript": "~5.7.0",
+    "vite": "^6.0.0"
+  }
+}
