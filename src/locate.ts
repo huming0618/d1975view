@@ -73,7 +73,8 @@ export function createLocateControl(
   let locateTimeoutId: ReturnType<typeof setTimeout> | null = null
   let abortLocating = false
   let pollIntervalId: ReturnType<typeof setInterval> | null = null
-  const POLL_INTERVAL_MS = 2500
+  const POLL_INTERVAL_MS = 1000
+  let pollInFlight = false
   let speedSample: { lat: number; lng: number; t: number } | null = null
   let lastSpeedKmh: number | null = null
   let speedTimerId: ReturnType<typeof setInterval> | null = null
@@ -213,15 +214,13 @@ export function createLocateControl(
   }
 
   function onWatchPosition(lat: number, lng: number, accuracy: number) {
+    const prev = lastLatLng
     updateMarker(lat, lng, accuracy)
-    
-    if (follow && state === 'following') {
-      programmaticMove = true
-      map.panTo(lastLatLng!, { animate: true })
-      map.once('moveend', () => {
-        programmaticMove = false
-      })
-    }
+    if (!follow || state !== 'following' || !lastLatLng) return
+    if (prev && prev.distanceTo(lastLatLng) < 8) return
+    programmaticMove = true
+    map.panTo(lastLatLng, { animate: false })
+    programmaticMove = false
   }
 
   function onError(err: GeolocationPositionError | Error | null, isTimeout = false) {
@@ -287,7 +286,7 @@ export function createLocateControl(
     try {
       if (Capacitor.isNativePlatform()) {
         Geolocation.watchPosition(
-          { enableHighAccuracy: true, timeout: 30000, minimumUpdateInterval: 1000 },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000, minimumUpdateInterval: 1000 },
           (position, err) => {
             if (err || !position) {
               console.warn('[Locate] Watch error:', err)
@@ -346,29 +345,36 @@ export function createLocateControl(
       return
     }
     
+    if (pollInFlight) return
+    pollInFlight = true
+    const done = () => {
+      pollInFlight = false
+    }
     if (Capacitor.isNativePlatform()) {
       Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
-        timeout: 2000,
-        maximumAge: 0,
+        timeout: 8000,
+        maximumAge: 2000,
       }).then((pos) => {
         console.log('[Locate] Poll GPS:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5))
         onWatchPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 0)
       }).catch((e) => {
         console.warn('[Locate] Poll GPS error:', e)
         if (lastLatLng) emitPosition()
-      })
+      }).finally(done)
     } else {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           console.log('[Locate] Poll GPS:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5))
           onWatchPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 0)
+          done()
         },
         (err) => {
           console.warn('[Locate] Poll GPS error:', err)
           if (lastLatLng) emitPosition()
+          done()
         },
-        { enableHighAccuracy: true, timeout: 2000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
       )
     }
   }
