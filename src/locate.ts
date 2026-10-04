@@ -2,6 +2,7 @@ import L from 'leaflet'
 import { Capacitor } from '@capacitor/core'
 import { Geolocation, type PermissionStatus } from '@capacitor/geolocation'
 import { haversineM } from './geo.ts'
+import { recordLocateDebug } from './locateDebug.ts'
 
 export type LocateState = 'idle' | 'locating' | 'following' | 'located'
 
@@ -135,6 +136,7 @@ export function createLocateControl(
   }
 
   function setState(next: LocateState) {
+    recordLocateDebug('状态', next)
     state = next
     opts.button.classList.toggle('active', next === 'following')
     opts.button.classList.toggle('located', next === 'located' || next === 'following')
@@ -290,6 +292,7 @@ export function createLocateControl(
           (position, err) => {
             if (err || !position) {
               console.warn('[Locate] Watch error:', err)
+              recordLocateDebug('跟随', `监听失败 ${err ? err.message : '空位置'}`)
               return
             }
             console.log('[Locate] Watch update:', position.coords.latitude, position.coords.longitude)
@@ -357,9 +360,11 @@ export function createLocateControl(
         maximumAge: 2000,
       }).then((pos) => {
         console.log('[Locate] Poll GPS:', pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5))
+        recordLocateDebug('跟随', `轮询 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} 精度 ${Math.round(pos.coords.accuracy ?? 0)} 米`)
         onWatchPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 0)
       }).catch((e) => {
         console.warn('[Locate] Poll GPS error:', e)
+        recordLocateDebug('跟随', `轮询失败 ${e instanceof Error ? e.message : String(e)}`)
         if (lastLatLng) emitPosition()
       }).finally(done)
     } else {
@@ -404,10 +409,12 @@ export function createLocateControl(
     }
     
     if (!ok) {
+      recordLocateDebug('权限', '没有位置权限')
       opts.toast('请允许位置权限后重试')
       setState('idle')
       return
     }
+    recordLocateDebug('权限', '已允许')
 
     if (abortLocating) {
       console.log('[Locate] Locate aborted after permission check')
@@ -418,6 +425,7 @@ export function createLocateControl(
     locateTimeoutId = setTimeout(() => {
       if (state === 'locating') {
         console.warn('[Locate] Client-side timeout reached')
+        recordLocateDebug('首次定位', '12 秒到了还没有位置')
         onError(null, true)
       }
     }, LOCATE_TIMEOUT_MS)
@@ -425,11 +433,13 @@ export function createLocateControl(
     try {
       const pos = await getInitialPosition()
       if (pos && !abortLocating) {
+        recordLocateDebug('首次定位', `成功 ${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)} 精度 ${Math.round(pos.accuracy)} 米`)
         onInitialPosition(pos.lat, pos.lng, pos.accuracy)
       }
     } catch (e) {
       if (!abortLocating) {
         console.error('[Locate] getInitialPosition failed:', e)
+        recordLocateDebug('首次定位', `失败 ${e instanceof Error ? e.message : String(e)}`)
         onError(e instanceof Error ? e : null)
       }
     }

@@ -1859,3 +1859,67 @@ html, body {
 #map-container[data-view="stay"] .leaflet-control-attribution {
   display: none !important;
 }
+
+.debug-view {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: var(--bg-dark);
+  padding-top: 108px;
+}
+.debug-view.hidden { display: none; }
+.debug-scroll {
+  height: 100%;
+  overflow: auto;
+  padding: 8px 12px 88px;
+}
+.debug-lead {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+.debug-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.debug-card h2 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.debug-mono {
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-primary);
+}
+.debug-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.debug-actions button {
+  border: none;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.debug-log {
+  list-style: none;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.debug-log li {
+  padding: 6px 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  word-break: break-all;
+}

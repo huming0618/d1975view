@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css'
 import './style.css'
 import { createBaseTiles, resolveAssetUrl } from './tiles.ts'
 import { createLocateControl, type LocatePosition } from './locate.ts'
+import { createLocateDebugView } from './locateDebug.ts'
 import {
   buildCorridor,
   buildSpine,
@@ -38,7 +39,7 @@ interface GeoJSONData {
   features: GeoJSONFeature[]
 }
 
-type AppView = 'map' | 'scale' | 'elevation' | 'river' | 'stay'
+type AppView = 'map' | 'scale' | 'elevation' | 'river' | 'stay' | 'debug'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 app.innerHTML = `
@@ -55,6 +56,7 @@ app.innerHTML = `
           <button type="button" id="view-elev-btn" class="view-toggle-btn" aria-pressed="false">海拔</button>
           <button type="button" id="view-river-btn" class="view-toggle-btn" aria-pressed="false">河流</button>
           <button type="button" id="view-stay-btn" class="view-toggle-btn" aria-pressed="false">停留</button>
+          <button type="button" id="view-debug-btn" class="view-toggle-btn" aria-pressed="false">调试</button>
         </div>
         <button id="fit-line-btn" title="显示全线">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,6 +79,7 @@ app.innerHTML = `
     <div id="elevation-view" class="elevation-view hidden" aria-label="D1975 海拔剖面"></div>
     <div id="river-view" class="river-view hidden" aria-label="D1975 沿线河流"></div>
     <div id="stay-view" class="stay-view hidden" aria-label="D1975 停留记录"></div>
+    <div id="debug-view" class="debug-view hidden" aria-label="定位调试"></div>
     <button id="locate-btn" class="locate-btn" title="定位 / 跟随我" type="button" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <circle cx="12" cy="12" r="3"/>
@@ -143,6 +146,7 @@ const scaleView = createScaleView(document.getElementById('scale-view')!)
 const elevationView = createElevationView(document.getElementById('elevation-view')!)
 const riverView = createRiverView(document.getElementById('river-view')!)
 const stayView = createStayView(document.getElementById('stay-view')!)
+const debugView = createLocateDebugView(document.getElementById('debug-view')!)
 initStayLog()
 const locationStatusCoords = document.getElementById('location-status-coords')!
 const locationStatusCorridor = document.getElementById('location-status-corridor')!
@@ -438,6 +442,7 @@ function setView(view: AppView) {
   const elevBtn = document.getElementById('view-elev-btn')!
   const riverBtn = document.getElementById('view-river-btn')!
   const stayBtn = document.getElementById('view-stay-btn')!
+  const debugBtn = document.getElementById('view-debug-btn')!
   const fitBtn = document.getElementById('fit-line-btn')!
   const mapEl = document.getElementById('map')!
 
@@ -446,17 +451,20 @@ function setView(view: AppView) {
   elevBtn.classList.toggle('active', view === 'elevation')
   riverBtn.classList.toggle('active', view === 'river')
   stayBtn.classList.toggle('active', view === 'stay')
+  debugBtn.classList.toggle('active', view === 'debug')
   mapBtn.setAttribute('aria-pressed', view === 'map' ? 'true' : 'false')
   scaleBtn.setAttribute('aria-pressed', view === 'scale' ? 'true' : 'false')
   elevBtn.setAttribute('aria-pressed', view === 'elevation' ? 'true' : 'false')
   riverBtn.setAttribute('aria-pressed', view === 'river' ? 'true' : 'false')
   stayBtn.setAttribute('aria-pressed', view === 'stay' ? 'true' : 'false')
+  debugBtn.setAttribute('aria-pressed', view === 'debug' ? 'true' : 'false')
 
   mapEl.classList.toggle('hidden-view', view !== 'map')
   scaleView.setVisible(view === 'scale')
   elevationView.setVisible(view === 'elevation')
   riverView.setVisible(view === 'river')
   stayView.setVisible(view === 'stay')
+  debugView.setVisible(view === 'debug')
   fitBtn.classList.toggle('hidden', view !== 'map')
 
   if (view === 'map') {
@@ -481,6 +489,7 @@ function setupControls() {
   document.getElementById('view-elev-btn')!.addEventListener('click', () => setView('elevation'))
   document.getElementById('view-river-btn')!.addEventListener('click', () => setView('river'))
   document.getElementById('view-stay-btn')!.addEventListener('click', () => setView('stay'))
+  document.getElementById('view-debug-btn')!.addEventListener('click', () => setView('debug'))
 
   const locateBtn = document.getElementById('locate-btn') as HTMLButtonElement
   const locateLabel = document.getElementById('locate-label')!
